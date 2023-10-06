@@ -282,6 +282,10 @@ class DahuaDataUpdateCoordinator(DataUpdateCoordinator):
                 else:
                     # Start the event listeners for doorbells (VTO)
                     await self.async_start_vto_event_listener()
+                
+                if self.is_amcrest_doorbell():
+                    externalBell = await self.client.async_get_external_doorbell()
+                    data.update(externalBell)
 
                 self.initialized = True
             except Exception as exception:
@@ -319,6 +323,7 @@ class DahuaDataUpdateCoordinator(DataUpdateCoordinator):
             if self.supports_smart_motion_detection_amcrest():
                 coros.append(asyncio.ensure_future(self.client.async_get_video_analyse_rules_for_amcrest()))
             if self.is_amcrest_doorbell():
+                coros.append(asyncio.ensure_future(self.client.async_get_external_doorbell()))
                 coros.append(asyncio.ensure_future(self.client.async_get_light_global_enabled()))
 
             # Gather results and update the data map
@@ -570,6 +575,10 @@ class DahuaDataUpdateCoordinator(DataUpdateCoordinator):
     def is_disarming_linkage_enabled(self) -> bool:
         """ Returns true if disarming linkage is enable """
         return self.data.get("table.DisableLinkage.Enable", "").lower() == "true"
+
+    def is_external_doorbell_enabled(self) -> bool:
+        """ Returns true if external doorbell is enabled """
+        return self.data.get("table.ExternalDoorBell.Enable", "").lower() == "true"
 
     def is_smart_motion_detection_enabled(self) -> bool:
         """ Returns true if smart motion detection is enabled """

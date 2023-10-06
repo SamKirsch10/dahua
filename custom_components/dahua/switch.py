@@ -24,11 +24,14 @@ async def async_setup_entry(hass: HomeAssistant, entry, async_add_devices):
     if coordinator.supports_smart_motion_detection() or coordinator.supports_smart_motion_detection_amcrest():
         devices.append(DahuaSmartMotionDetectionBinarySwitch(coordinator, entry))
 
-    try:
-        await coordinator.client.async_get_disarming_linkage()
-        devices.append(DahuaDisarmingLinkageBinarySwitch(coordinator, entry))
-    except ClientError as exception:
-        pass
+    if coordinator.is_doorbell():
+        devices.append(DahuaExternalDoorBellBinarySwitch(coordinator, entry))
+    else:
+        try:
+            await coordinator.client.async_get_disarming_linkage()
+            devices.append(DahuaDisarmingLinkageBinarySwitch(coordinator, entry))
+        except ClientError as exception:
+            pass
 
     async_add_devices(devices)
 
@@ -116,6 +119,46 @@ class DahuaDisarmingLinkageBinarySwitch(DahuaBaseEntity, SwitchEntity):
         Value is fetched from client.async_get_linkage
         """
         return self._coordinator.is_disarming_linkage_enabled()
+
+class DahuaExternalDoorBellBinarySwitch(DahuaBaseEntity, SwitchEntity):
+    """will set the external doorbell on/off"""
+
+    async def async_turn_on(self, **kwargs):  # pylint: disable=unused-argument
+        """Turn on/enable linkage"""
+        await self._coordinator.client.async_set_external_doorbell(True)
+        await self._coordinator.async_refresh()
+
+    async def async_turn_off(self, **kwargs):  # pylint: disable=unused-argument
+        """Turn off/disable linkage"""
+        await self._coordinator.client.async_set_external_doorbell(False)
+        await self._coordinator.async_refresh()
+
+    @property
+    def name(self):
+        """Return the name of the switch."""
+        return self._coordinator.get_device_name() + " " + "External Chime"
+
+    @property
+    def unique_id(self):
+        """
+        A unique identifier for this entity. Needs to be unique within a platform (ie light.hue). Should not be
+        configurable by the user or be changeable see
+        https://developers.home-assistant.io/docs/entity_registry_index/#unique-id-requirements
+        """
+        return self._coordinator.get_serial_number() + "_external_chime"
+
+    @property
+    def icon(self):
+        """Return the icon of this switch."""
+        return DISARMING_ICON
+
+    @property
+    def is_on(self):
+        """
+        Return true if the switch is on.
+        Value is fetched from client.async_get_linkage
+        """
+        return self._coordinator.is_external_doorbell_enabled()
 
 
 class DahuaSmartMotionDetectionBinarySwitch(DahuaBaseEntity, SwitchEntity):
