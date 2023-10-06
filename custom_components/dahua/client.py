@@ -594,17 +594,14 @@ class DahuaClient:
 
         value = "false"
         typeValue = 0
-        timeValue = 0
         if enabled:
             value = "true"
             typeValue = 1
-            timeValue = 3
 
+        if self.get_device_type == "AD410":
+            url = "/cgi-bin/configManager.cgi?action=setConfig&ExternalDoorBell.Type={0}".format(typeValue)
+            await self.get(url)
         url = "/cgi-bin/configManager.cgi?action=setConfig&ExternalDoorBell.Enable={0}".format(value)
-        await self.get(url)
-        url = "/cgi-bin/configManager.cgi?action=setConfig&ExternalDoorBell.Time={0}".format(timeValue)
-        await self.get(url)
-        url = "/cgi-bin/configManager.cgi?action=setConfig&ExternalDoorBell.Type={0}".format(typeValue)
         return await self.get(url)
 
     async def async_set_record_mode(self, channel: int, mode: str) -> dict:
