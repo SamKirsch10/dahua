@@ -604,6 +604,23 @@ class DahuaClient:
         url = "/cgi-bin/configManager.cgi?action=setConfig&DisableLinkage[{0}].Enable={1}".format(channel, value)
         return await self.get(url)
 
+    async def async_set_external_doorbell(self, enabled: bool) -> dict:
+        """
+        async_set_external_doorbell will set the external doorbell
+        """
+
+        value = "false"
+        doorbellType = 0
+        if enabled:
+            value = "true"
+            doorbellType = 1
+
+        url = "/cgi-bin/configManager.cgi?action=setConfig&ExternalDoorBell.Enable={1}".format(value)
+        await self.get(url)
+
+        url = "/cgi-bin/configManager.cgi?action=setConfig&ExternalDoorBell.Type={1}".format(doorbellType)
+        return await self.get(url)
+
     async def async_set_record_mode(self, channel: int, mode: str) -> dict:
         """
         async_set_record_mode sets the record mode.
@@ -633,6 +650,20 @@ class DahuaClient:
             return await self.get(url)
         except aiohttp.ClientResponseError as e:
             return {"table.DisableLinkage.Enable": "false"}
+
+    async def async_get_external_doorbell(self) -> dict:
+        """
+        async_get_external_doorbell will return true if the external doorbell is enabled
+
+        returns
+        table.ExternalDoorBell.Enable=false
+        """
+
+        url = "/cgi-bin/configManager.cgi?action=getConfig&name=ExternalDoorBell"
+        try:
+            return await self.get(url)
+        except aiohttp.ClientResponseError as e:
+            return {"table.ExternalDoorBell.Enable": "false"}
 
     async def async_access_control_open_door(self, door_id: int = 1) -> dict:
         """

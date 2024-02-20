@@ -581,6 +581,10 @@ class DahuaDataUpdateCoordinator(DataUpdateCoordinator):
         """ Returns true if disarming linkage is enable """
         return self.data.get("table.DisableLinkage.Enable", "").lower() == "true"
 
+    def is_external_doorbell_enabled(self) -> bool:
+        """ Returns true if disarming linkage is enable """
+        return self.data.get("table.ExternalDoorBell.Enable", "").lower() == "true"
+
     def is_smart_motion_detection_enabled(self) -> bool:
         """ Returns true if smart motion detection is enabled """
         if self.supports_smart_motion_detection_amcrest():
